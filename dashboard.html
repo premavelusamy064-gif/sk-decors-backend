@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="style123.css">
+</head>
+<body>
+
+<script>
+if(localStorage.getItem("isLoggedIn") !== "true"){
+    window.location.href = "login.html";
+}
+</script>
+
+<!-- TOP NAVIGATION -->
+<nav class="top-nav">
+    <div class="title-area">
+        <h2>Admin Dashboard</h2>
+    </div>
+
+   <ul>
+  <li class="dropdown">
+    <div class="profile-pic" id="profileBtn">A</div>
+
+    <div class="dropdown-menu" id="dropdownMenu">
+  <h4 id="adminName"></h4>
+  <p id="adminEmail"></p>
+
+  <button onclick="openEditProfile()">Edit Profile</button>
+  <button onclick="deleteProfile()">Delete Profile</button>
+
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+  </li>
+</ul>
+
+</nav>
+
+<!-- DASHBOARD MAIN -->
+<div class="dashboard-container">
+<!-- ===== GALLERY POPUP ===== -->
+<div id="galleryPopup" class="gallery-overlay">
+  <div class="gallery-popup-box">
+
+    <h2>Select Gallery Section</h2>
+
+    <div class="popup-cards">
+      <div class="popup-card" onclick="openPage('slideshow.html')">
+        🎞️ <p>Slideshow</p>
+      </div>
+
+      <div class="popup-card" onclick="openPage('homepage.html')">
+        🏠 <p>Homepage Images</p>
+      </div>
+
+      <div class="popup-card" onclick="openPage('gallery.html')">
+        🖼️ <p>Full Gallery</p>
+      </div>
+    </div>
+
+    <button class="close-btn" onclick="closeGalleryPopup()">Close</button>
+  </div>
+</div>
+
+<div class="card" onclick="openGalleryPopup()">
+
+  <div class="card-icon">🖼️</div>
+    <div class="card-title">Gallery</div>
+    <div class="card-value" id="galleryCount">0</div>
+</div>
+
+<div class="card" onclick="location.href='services.html'">
+    <div class="card-icon">🛠️</div>
+    <div class="card-title">Services</div>
+    <div class="card-value" id="servicesCount">0</div>
+</div>
+
+<div class="card" onclick="location.href='bookings.html'">
+    <div class="card-icon">📋</div>
+    <div class="card-title">Bookings</div>
+    <div class="card-value" id="bookingCount">0</div>
+</div>
+
+<div class="card" onclick="location.href='messages.html'">
+    <div class="card-icon">💬</div>
+
+    <div class="card-title">Messages</div>
+    <div class="card-value" id="messageCount">0</div>
+</div>
+
+</div>
+<!-- EDIT PROFILE POPUP -->
+<div id="editProfilePopup" class="popup-overlay">
+  <div class="popup-box">
+    <h3>Edit Admin Profile</h3>
+
+    <input type="text" id="editUsername" placeholder="Username">
+    <input type="email" id="editEmail" placeholder="Email">
+
+    <button onclick="updateProfile()">Save</button>
+    <button onclick="closeEditProfile()">Cancel</button>
+  </div>
+</div>
+
+<script>
+  let adminId = null;
+
+// Show logged-in username
+function loadAdminProfile(){
+  const username = localStorage.getItem("adminUser");
+
+  fetch(`/api/admin-profile?username=${username}`)
+    .then(res => res.json())
+    .then(data => {
+      if(data.error) return;
+
+      adminId = data.id; // 🔴 VERY IMPORTANT
+
+      document.getElementById("adminName").innerText = data.username;
+      document.getElementById("adminEmail").innerHTML =
+        `<strong>Email:</strong> ${data.email}`;
+
+      document.getElementById("editUsername").value = data.username;
+      document.getElementById("editEmail").value = data.email;
+
+      document.getElementById("profileBtn").innerText =
+        data.username.charAt(0).toUpperCase();
+    })
+    .catch(err => console.log("Profile load error:", err));
+}
+// Dropdown Logic
+const profile = document.getElementById("profileBtn");
+const menu = document.getElementById("dropdownMenu");
+
+profile.addEventListener("click", (e) => {
+    e.stopPropagation();
+    menu.classList.toggle("show");
+});
+document.addEventListener("click", (e) => {
+    if (!menu.contains(e.target)) {
+        menu.classList.remove("show");
+    }
+});
+
+function logout(){
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("adminUser");
+    window.location.href = "login.html";
+}
+
+// ====== Dashboard counts fetch ======
+
+// Function to fetch and update counts
+function updateDashboardCounts() {
+  fetch("/api/dashboard-summary")
+    .then(res => res.json())
+    .then(data => {
+      console.log("DASHBOARD DATA:", data);   // 🔍 DEBUG LINE
+
+      document.getElementById("galleryCount").innerText = data.gallery;
+      document.getElementById("servicesCount").innerText = data.services;
+      document.getElementById("bookingCount").innerText = data.bookings;
+      document.getElementById("messageCount").innerText = data.messages;
+    })
+    .catch(err => console.error("Fetch error:", err));
+}
+function openGalleryPopup(){
+  document.getElementById("galleryPopup").style.display = "flex";
+}
+
+function closeGalleryPopup(){
+  document.getElementById("galleryPopup").style.display = "none";
+}
+
+function openPage(page){
+  window.location.href = page;
+}
+function openEditProfile(){
+  document.getElementById("editProfilePopup").style.display = "flex";
+}
+
+function closeEditProfile(){
+  document.getElementById("editProfilePopup").style.display = "none";
+}
+function updateProfile(){
+  const newUsername = document.getElementById("editUsername").value;
+  const newEmail = document.getElementById("editEmail").value;
+
+  fetch(`/api/admin-profile/${adminId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: newUsername,
+      email: newEmail
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if(data.success){
+
+      // 🔥 IMPORTANT FIX
+      localStorage.setItem("adminUser", newUsername);
+
+      alert("Profile updated");
+      closeEditProfile();
+      loadAdminProfile(); // now fetch works
+    } else {
+      alert("Update failed");
+    }
+  });
+}
+function deleteProfile(){
+  if(!confirm("Are you sure? Admin will be deleted.")) return;
+
+  fetch(`/api/admin-profile/${adminId}`, {
+    method: "DELETE"
+  })
+  .then(res => res.json())
+  .then(data => {
+    if(data.success){
+      alert("Admin deleted");
+      logout();
+    }
+  });
+}
+
+loadAdminProfile();
+
+// Run once on page load
+updateDashboardCounts();
+
+// Auto-refresh every 5 seconds
+setInterval(updateDashboardCounts, 5000);
+
+  </script>
+
+</body>
+</html>

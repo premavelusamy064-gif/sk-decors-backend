@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Services Management</title>
+
+<style>
+body{
+  font-family:"Times New Roman", Times, serif;
+  margin:0;
+  background:#f4f6fb;
+}
+.top-bar{
+  background:#7d2440;
+  color:#fff;
+  padding:15px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.top-bar a{
+  color:#fff;
+  text-decoration:none;
+  font-weight:600;
+}
+.add-btn{
+  margin:20px;
+  padding:10px 16px;
+  background:#7d2440;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+.services{
+  padding:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:15px;
+}
+.card{
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 6px 15px rgba(0,0,0,.1);
+  padding:20px;
+  text-align:center;
+}
+.service-title{
+  font-size:16px;
+  font-weight:600;
+  margin-bottom:15px;
+}
+.actions{
+  display:flex;
+  justify-content:space-around;
+}
+.actions button{
+  border:none;
+  padding:6px 12px;
+  cursor:pointer;
+  border-radius:6px;
+}
+.edit{background:#ffc107;}
+.delete{background:#dc3545;color:#fff;}
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+.popup-box{
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+}
+.popup-box input, .popup-box button{
+  width:100%;
+  padding:8px;
+  margin-top:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top-bar">
+  <h3>Services Management</h3>
+  <a href="dashboard.html">← Back</a>
+</div>
+
+<button class="add-btn" onclick="openPopup()">+ Add Service</button>
+
+<div class="services" id="services"></div>
+
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-box">
+    <h4 id="popupTitle">Add Service</h4>
+    <input type="text" id="serviceName" placeholder="Service name">
+    <button onclick="saveService()">Save</button>
+    <button onclick="closePopup()">Cancel</button>
+  </div>
+</div>
+
+<script>
+let editId = null;
+
+function loadServices(){
+  fetch("/api/services")
+    .then(res=>res.json())
+    .then(data=>{
+      const box=document.getElementById("services");
+      box.innerHTML="";
+      data.forEach(s=>{
+        box.innerHTML+=`
+          <div class="card">
+            <div class="service-title">${s.service_name}</div>
+            <div class="actions">
+              <button class="edit" onclick="editService(${s.id},'${s.service_name}')">Edit</button>
+              <button class="delete" onclick="deleteService(${s.id})">Delete</button>
+            </div>
+          </div>`;
+      });
+    });
+}
+
+function openPopup(){
+  editId=null;
+  serviceName.value="";
+  popupTitle.innerText="Add Service";
+  popup.style.display="flex";
+}
+function closePopup(){ popup.style.display="none"; }
+
+function saveService(){
+  const val=serviceName.value.trim();
+  if(val==="") return alert("Enter service");
+
+  if(editId===null){
+    fetch("/api/services",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({service_name:val})
+    }).then(loadServices);
+  }else{
+    fetch("/api/services/"+editId,{
+      method:"PUT",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({service_name:val})
+    }).then(loadServices);
+  }
+  closePopup();
+}
+
+function editService(id,name){
+  editId=id;
+  serviceName.value=name;
+  popupTitle.innerText="Edit Service";
+  popup.style.display="flex";
+}
+
+function deleteService(id){
+  if(confirm("Delete service?")){
+    fetch("/api/services/"+id,{method:"DELETE"})
+      .then(loadServices);
+  }
+}
+
+loadServices();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Gallery – SK Decor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<style>
+  body {
+    font-family: "Times New Roman", Times, serif;
+    background: #f9f9f9;
+    padding: 20px;
+  }
+
+  .full-gallery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+  }
+
+  .full-gallery-header h2 {
+    font-size: 28px;
+    color: #333;
+  }
+
+  .back-btn {
+    font-size: 16px;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    background: #7d2440;
+    color: #fff;
+  }
+
+  .full-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+  }
+
+  .full-gallery-grid img {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    cursor: pointer;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="full-gallery-header">
+  <h2>All Images</h2>
+  <a href="index.html#gallery" class="back-btn">← Back</a>
+</div>
+
+<div class="full-gallery-grid" id="fullGalleryGrid"></div>
+
+
+<!-- SAME IMAGE MODAL FROM HOME PAGE -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="modal-close" id="modalClose">✕</button>
+    <img id="modalImg" src="" alt="">
+    <div class="modal-nav">
+      <button id="prevBtn" class="link-btn">◀ Prev</button>
+      <button id="nextBtn" class="link-btn">Next ▶</button>
+    </div>
+    <div class="small-thumbs" id="thumbs"></div>
+  </div>
+</div>
+
+
+<script>
+let images = [];
+let currentIndex = 0;
+
+const modal = document.getElementById("modal");
+const modalImg = document.getElementById("modalImg");
+const modalClose = document.getElementById("modalClose");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const thumbs = document.getElementById("thumbs");
+
+fetch("/api/gallery?section=gallery")
+  .then(res => res.json())
+  .then(data => {
+    images = data;
+    const grid = document.getElementById("fullGalleryGrid");
+    grid.innerHTML = "";
+
+    images.forEach((img, index) => {
+      const i = document.createElement("img");
+      i.src = img.image_url;
+      i.onclick = () => {
+        currentIndex = index;
+        openModal();
+      };
+      grid.appendChild(i);
+    });
+  });
+
+function openModal() {
+  modal.style.display = "flex";
+  updateModal();
+  buildThumbs();
+}
+
+function closeModal() {
+  modal.style.display = "none";
+}
+
+function updateModal() {
+  modalImg.src = images[currentIndex].image_url;
+}
+
+modalClose.onclick = closeModal;
+
+prevBtn.onclick = () => {
+  currentIndex = (currentIndex - 1 + images.length) % images.length;
+  updateModal();
+};
+
+nextBtn.onclick = () => {
+  currentIndex = (currentIndex + 1) % images.length;
+  updateModal();
+};
+
+function buildThumbs() {
+  thumbs.innerHTML = "";
+  images.forEach((img, index) => {
+    const t = document.createElement("img");
+    t.src = img.image_url;
+    t.style.width = "60px";
+    t.style.height = "60px";
+    t.style.objectFit = "cover";
+    t.style.borderRadius = "6px";
+    t.style.cursor = "pointer";
+    if (index === currentIndex) t.style.border = "2px solid #7d2440";
+
+    t.onclick = () => {
+      currentIndex = index;
+      updateModal();
+      buildThumbs();
+    };
+
+    thumbs.appendChild(t);
+  });
+}
+
+// click outside image to close
+modal.onclick = (e) => {
+  if (e.target === modal) closeModal();
+};
+</script>
+
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SK Decor — Event Planner</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LEFT SIDE MENU -->
+<div id="sideMenu" class="side-menu">
+  <div class="close-btn" onclick="closeMenu()">&times;</div>
+
+  <ul>
+    <li><a href="#home" onclick="closeMenu()">Home</a></li>
+    <li><a href="#services" onclick="closeMenu()">Services</a></li>
+    <li><a href="#gallery" onclick="closeMenu()">Gallery</a></li>
+    <li><a href="#contact" onclick="closeMenu()">Contact</a></li>
+<li><a href="login.html" onclick="closeMenu()">Admin / Login</a></li>  </ul>
+</div>
+
+
+<header class="header" id="home">
+  
+  <!-- BACKGROUND SLIDESHOW -->
+  <div class="hero-slider" id="heroSlider"></div>
+
+  <!-- TOPBAR -->
+  <div class="container topbar">
+
+    <!-- HAMBURGER LEFT -->
+    <button class="hamburger left-hamb" id="hambBtn" aria-label="Toggle menu">☰</button>
+
+    <!-- LOGO -->
+    <div class="brand">
+      <div class="logo-mark">sk</div>
+      <div class="brand-txt">
+        <h1>SK Decor</h1>
+        <small>Event Planner</small>
+      </div>
+    </div>
+
+    <!-- DESKTOP NAV -->
+    <nav class="nav" id="siteNav">
+      <a href="#home">Home</a>
+      <a href="#services">Services</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#contact">Contact</a>
+      <a  href="login.html">Admin / Login</a>
+    </nav>
+
+  </div>
+
+  <div class="container hero-text">
+<h2 class="hero-heading white-glitter">If You Can Dream It, We Can Create It...</h2>
+    <a class="explore" href="#gallery">Explore Gallery</a>
+<a class="explore bookNowBtn" href="#contact">Book Now</a>
+    
+  </div>
+</header>
+
+
+
+<main class="container">
+
+  <section class="cards-container" id="services">
+<div class="card-box hover-card">      <h2 class="card-title">About Us</h2>
+      <p><strong>SK Decor</strong> — Event planner & decor specialist. We design elegant engagements, weddings, baby showers, birthday events, and puberty ceremonies tailored to your taste.</p>
+    </div>
+
+<div class="card-box hover-card">  <h2 class="card-title">Our Services</h2>
+
+  <!-- AUTO LOAD SERVICES -->
+  <div class="services-list" id="homeServices"></div>
+</div>
+
+  </section>
+
+
+  <section class="section card-box" id="gallery">
+    <div class="section-head">
+      <h3>Gallery</h3>
+<a href="full-gallery.html" class="view-all">Show all images →</a>
+
+    </div>
+<div class="gallery-grid limit-8" id="galleryGrid"></div>  </section>
+
+  <section class="section card-box" id="contact">
+    <div class="contact-layout">
+      <div class="contact-left ">
+        <h3>Contact Us</h3>
+        <div class="contact-card">
+          <ul class="contact-list">
+            <li><strong>Phone:</strong> <span>+91 93603 77726</span></li>
+            <li><strong>Phone:</strong> <span>+91 63827 90842</span></li>
+            <li><strong>Email:</strong> <span>skdecor1117@gmail.com</span></li>
+            <li><strong>Address:</strong> <span>Gobichettipalayam, Erode - 638476</span></li>
+<div class="contact-buttons">
+  <a href="https://wa.me/919360377726" target="_blank" class="wa-btn">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="wa-icon">
+    <span>Start Chat</span>
+  </a>
+
+  <a href="https://www.instagram.com/skdecor1117" target="_blank" class="insta-btn">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram" class="wa-icon">
+    <span>Follow us</span>
+  </a>
+</div>
+
+          </ul>
+        </div>
+      </div>
+
+      <div class="contact-right">
+        <div class="form-header">Send a message</div>
+        <form id="contactForm" class="contact-form" novalidate>
+          <div class="row-input">
+            <input type="text" id="name" placeholder="Your name" required>
+            <input type="tel" id="phone" placeholder="Phone or WhatsApp" required>
+          </div>
+
+          <input type="email" id="email" placeholder="Email (optional)" style="margin-top:10px">
+
+          <textarea id="message" placeholder="Tell us about your event" required style="margin-top:10px"></textarea>
+          
+          <div class="form-actions">
+            <button type="reset" class="btn-light">Clear</button>
+            <button type="submit" class="btn-primary">Send</button>
+          </div>
+
+          <div id="formMsg" class="form-msg"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+
+  <footer class="footer">
+    © <strong>SK Decor</strong> — Event Planner. Designed & built responsive.
+  </footer>
+
+</main>
+
+
+<!-- IMAGE MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="modal-close" id="modalClose">✕</button>
+    <img id="modalImg" src="" alt="">
+    <div class="modal-nav">
+      <button id="prevBtn" class="link-btn">◀ Prev</button>
+      <button id="nextBtn" class="link-btn">Next ▶</button>
+    </div>
+    <div class="small-thumbs" id="thumbs"></div>
+  </div>
+</div>
+<script>
+function loadHomeImages(){
+  fetch("/api/gallery/homepage")
+    .then(res => res.json())
+    .then(data => {
+      const grid = document.getElementById("galleryGrid");
+      grid.innerHTML = "";
+
+      data.forEach((img, i) => {
+        grid.innerHTML += `
+          <img src="${img.image_url}" data-index="${i}">
+        `;
+      });
+    });
+}
+
+loadHomeImages();
+
+fetch("/api/gallery/slideshow")
+  .then(res => res.json())
+  .then(data => {
+    const box = document.getElementById("heroSlider");
+    box.innerHTML = "";
+
+    data.forEach((img, i) => {
+      box.innerHTML += `<img src="${img.image_url}" class="slide ${i === 0 ? 'active' : ''}">`;
+    });
+
+    startSlideshow();
+  });
+
+let slideIndex = 0;
+let slideTimer;
+
+function startSlideshow() {
+  const slides = document.querySelectorAll(".hero-slider .slide");
+  if (!slides.length) return;
+
+  function showSlide() {
+    slides.forEach(slide => slide.classList.remove("active"));
+    slides[slideIndex].classList.add("active");
+    slideIndex = (slideIndex + 1) % slides.length;
+  }
+
+  showSlide();
+  slideTimer = setInterval(showSlide, 3000);
+
+  const header = document.querySelector(".header");
+  header.addEventListener("mouseenter", () => clearInterval(slideTimer));
+  header.addEventListener("mouseleave", () => {
+    slideTimer = setInterval(showSlide, 3000);
+  });
+}
+fetch("/api/services")
+  .then(res=>res.json())
+  .then(data=>{
+    const box=document.getElementById("homeServices");
+    box.innerHTML="";
+    data.forEach(s=>{
+      box.innerHTML+=`<div class="service-pill">${s.service_name}</div>`;
+    });
+  });
+function openMenu() {
+  document.getElementById("sideMenu").style.width = "260px";
+}
+function closeMenu() {
+  document.getElementById("sideMenu").style.width = "0";
+}
+document.getElementById("hambBtn").addEventListener("click", openMenu);
+// ====== Mobile nav toggle ======
+const hamb = document.getElementById('hambBtn');
+const nav = document.getElementById('siteNav');
+
+hamb.addEventListener('click', () => {
+  const isOpen = nav.classList.toggle('open');
+  hamb.setAttribute('aria-expanded', String(isOpen));
+});
+
+// Close nav when clicking outside on small screens
+document.addEventListener('click', (e) => {
+  if (window.innerWidth <= 800) {
+    if (!nav.contains(e.target) && !hamb.contains(e.target)) {
+      nav.classList.remove('open');
+      hamb.setAttribute('aria-expanded', 'false');
+    }
+  }
+});
+
+// ====== Gallery modal logic ======
+const imgs = Array.from(document.querySelectorAll('#galleryGrid img'));
+const modal = document.getElementById('modal');
+const modalImg = document.getElementById('modalImg');
+const thumbs = document.getElementById('thumbs');
+const closeBtn = document.getElementById('modalClose');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+let idx = 0;
+
+function openModal(i){
+  idx = i;
+  updateModal();
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(){
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+function updateModal(){
+  const src = imgs[idx].src;
+  modalImg.src = src;
+  // thumbnails
+  thumbs.innerHTML = '';
+  imgs.forEach((im, i) => {
+    const t = document.createElement('img');
+    t.src = im.src;
+    t.alt = im.alt || `thumb ${i+1}`;
+    t.className = (i===idx) ? 'active' : '';
+    t.onclick = ()=>{ idx = i; updateModal(); }
+    thumbs.appendChild(t);
+  });
+}
+
+// attach click listeners
+imgs.forEach((img,i)=> img.addEventListener('click', ()=> openModal(i)));
+closeBtn.addEventListener('click', closeModal);
+modal.addEventListener('click', (e)=> { if(e.target === modal) closeModal(); });
+prevBtn.addEventListener('click', ()=>{ idx = (idx-1+imgs.length)%imgs.length; updateModal(); });
+nextBtn.addEventListener('click', ()=>{ idx = (idx+1)%imgs.length; updateModal(); });
+
+// keyboard navigation for modal
+document.addEventListener('keydown', (e) => {
+  if (modal.getAttribute('aria-hidden') === 'false') {
+    if (e.key === 'ArrowLeft') prevBtn.click();
+    if (e.key === 'ArrowRight') nextBtn.click();
+    if (e.key === 'Escape') closeBtn.click();
+  }
+});
+
+// ====== Contact form → Backend API ======
+const form = document.getElementById('contactForm');
+const formMsg = document.getElementById('formMsg');
+
+// Example: if the page has a Book Now button, set the source
+let source = "Contact"; // default
+
+// When Book Now button is clicked, change source
+document.querySelectorAll(".bookNowBtn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    source = "Book"; // update source dynamically
+    // Optionally scroll to contact section
+    document.querySelector("#contact").scrollIntoView({ behavior: "smooth" });
+  });
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const data = {
+    name: document.getElementById('name').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    message: document.getElementById('message').value.trim(),
+    source // send the correct source
+  };
+
+  if (!data.name || !data.phone || !data.message) {
+    formMsg.style.color = "crimson";
+    formMsg.textContent = "Please fill required fields";
+    return;
+  }
+
+  formMsg.style.color = "#555";
+  formMsg.textContent = "Sending message...";
+
+  try {
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+
+    if (result.success) {
+      formMsg.style.color = "green";
+      formMsg.textContent = "Message sent successfully! We will contact you soon.";
+      form.reset();
+      source = "Contact"; // reset to default
+    } else {
+      formMsg.style.color = "crimson";
+      formMsg.textContent = "Failed to send message. Try again.";
+    }
+  } catch (err) {
+    formMsg.style.color = "crimson";
+    formMsg.textContent = "Server error. Please try later.";
+  }
+});
+function openMenu() {
+  document.getElementById("sideMenu").style.width = "260px";
+}
+
+function closeMenu() {
+  document.getElementById("sideMenu").style.width = "0";
+}
+
+document.getElementById("hambBtn").addEventListener("click", openMenu);
+
+const grid = document.getElementById("galleryGrid");
+const btn  = document.getElementById("toggleGallery");
+
+btn.addEventListener("click", () => {
+
+  if (grid.classList.contains("limit-8")) {
+    grid.classList.remove("limit-8");
+    btn.textContent = "Show less images →";
+  } else {
+    grid.classList.add("limit-8");
+    btn.textContent = "Show all images →";
+  }
+
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Login — SK Decor</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --accent: #7d2440;
+    --muted: #f3e6da;
+    --dark: #2b2b2b;
+    --glass: rgba(255, 255, 255, 0.85);
+}
+
+/* Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+html, body {
+    height: 100%;
+    font-family: "Times New Roman", Times, serif;
+    background: var(--muted);
+    color: var(--dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Login Area */
+.login-area {
+    width: 360px;
+    padding: 32px;
+    background: var(--glass);
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.15);
+    text-align: center;
+}
+.login-area h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: var(--accent);
+}
+.login-area input {
+    width: 100%;
+    padding: 10px 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.15);
+    background: transparent;   /* TRANSPARENT INPUT */
+    color: var(--dark);
+    font-size: 14px;
+}
+.login-area input::placeholder {
+    color: rgba(0,0,0,0.5);
+}
+
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+.login-btn:hover {
+    background: #5c1b30;
+    transform: translateY(-2px);
+}
+
+.forgot {
+    display: block;
+    margin: 8px 0;
+    font-size: 13px;
+    color: var(--dark);
+    text-decoration: underline;
+    cursor: pointer;
+}
+.forgot:hover {
+    color: var(--accent);
+}
+
+.back-home {
+    display: inline-block;
+    margin-top: 16px;
+    color: var(--dark);
+    text-decoration: none;
+    font-weight: 600;
+}
+.back-home:hover {
+    color: var(--accent);
+}
+
+/* POPUPS */
+.popup {
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.6);
+    z-index: 9999;
+}
+.popup .content {
+    width: 320px;
+    padding: 28px;
+    background: var(--glass);
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.2);
+    text-align: center;
+}
+.popup input {
+    width: 100%;
+    padding: 10px 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.15);
+    background: transparent;   /* TRANSPARENT INPUT */
+    color: var(--dark);
+    font-size: 14px;
+}
+.popup-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+.popup-btn:hover {
+    background: #5c1b30;
+    transform: translateY(-2px);
+}
+.popup-close {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.15);
+    color: var(--dark);
+    cursor: pointer;
+}
+.popup-close:hover {
+    background: rgba(0,0,0,0.25);
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-area">
+    <h2>Admin Login</h2>
+    <form onsubmit="return loginUser()">
+        <input type="text" id="username" placeholder="Enter Username" required>
+        <input type="password" id="password" placeholder="Enter Password" required>
+        <a href="#" class="forgot" onclick="openEmailBox()">Forgot Password?</a>
+        <button class="login-btn" type="submit">Login</button>
+    </form>
+    <a href="index.html" class="back-home">← Back to Home</a>
+</div>
+
+<!-- EMAIL POPUP -->
+<div class="popup" id="emailPopup">
+    <div class="content">
+        <h3>Reset Password</h3>
+        <p>Enter your registered email or username</p>
+        <input type="text" id="resetEmail" placeholder="Email or Username">
+        <button onclick="submitEmail()" class="popup-btn">Submit</button>
+        <button onclick="closePopups()" class="popup-close">Cancel</button>
+    </div>
+</div>
+
+<!-- NEW PASSWORD POPUP -->
+<div class="popup" id="newPassPopup">
+    <div class="content">
+        <h3>Create New Password</h3>
+        <input type="password" id="newPass" placeholder="New Password">
+        <input type="password" id="confirmPass" placeholder="Confirm Password">
+        <button onclick="saveNewPassword()" class="popup-btn">Update</button>
+        <button onclick="closePopups()" class="popup-close">Cancel</button>
+    </div>
+</div>
+
+<script>
+let resetValue = "";
+
+// LOGIN
+function loginUser() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    fetch("http://10.101.102.133:3000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("adminUser", username);
+            window.location.href = "dashboard.html";
+        } else {
+            alert("Invalid Username or Password");
+        }
+    });
+
+    return false;
+}
+
+// FORGOT PASSWORD
+function openEmailBox() {
+    document.getElementById("emailPopup").style.display = "flex";
+}
+
+function submitEmail() {
+    const value = document.getElementById("resetEmail").value.trim();
+    if (!value) return alert("Enter email or username");
+
+    fetch("http://localhost:3000/api/forgot-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            resetValue = value;
+            document.getElementById("emailPopup").style.display = "none";
+            document.getElementById("newPassPopup").style.display = "flex";
+        } else {
+            alert("Email or Username not found");
+        }
+    });
+}
+
+// RESET PASSWORD
+function saveNewPassword() {
+    const newPass = document.getElementById("newPass").value;
+    const confirmPass = document.getElementById("confirmPass").value;
+
+    if (!newPass || !confirmPass) return alert("Enter all fields");
+    if (newPass !== confirmPass) return alert("Passwords do not match");
+
+    fetch("http://localhost:3000/api/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: resetValue, newPassword: newPass })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("Password updated successfully!");
+            closePopups();
+        } else {
+            alert("Error updating password");
+        }
+    });
+}
+
+// CLOSE POPUPS
+function closePopups() {
+    document.getElementById("emailPopup").style.display = "none";
+    document.getElementById("newPassPopup").style.display = "none";
+}
+</script>
+
+</body>
+</html>

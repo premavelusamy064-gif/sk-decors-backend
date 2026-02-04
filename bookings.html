@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bookings</title>
+<link rel="stylesheet" href="styles.css" />
+<script src="bookings.js" defer></script>
+</head>
+<body>
+<header class="top-bar">Bookings</header>
+<section class="container">
+<h2>All Bookings</h2>
+<div id="bookingList" class="card-list"></div>
+</section>
+<script>
+    function loadBookings(){
+  fetch("/api/bookings")
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById("bookingList");
+      list.innerHTML = "";
+
+      if(data.length === 0){
+        list.innerHTML = "<p>No booking enquiries</p>";
+        return;
+      }
+
+      data.forEach(b => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h3>${b.name}</h3>
+          <p><strong>Phone:</strong> ${b.phone}</p>
+          <p><strong>Email:</strong> ${b.email || "-"}</p>
+          <p><strong>Message:</strong> ${b.message}</p>
+          <h3><b><span class="tag book">Booking</span><b></h3>
+        `;
+        list.appendChild(card);
+      });
+    });
+}
+
+window.onload = loadBookings;
+</script>
+</body>
+</html>

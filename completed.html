@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Completed Events</title>
+<link rel="stylesheet" href="styles.css" />
+<script src="completed.js" defer></script>
+</head>
+<body>
+<header class="top-bar">Completed Events</header>
+<section class="container">
+<h2>Finished Events</h2>
+<div id="completedList" class="card-list"></div>
+</section>
+</body>
+<script>
+    const completed=[
+{event:"Wedding", customer:"Arun", date:"2025-12-01"},
+{event:"Birthday", customer:"Swathi", date:"2025-11-20"}
+];
+
+
+function loadCompleted(){
+const list=document.getElementById("completedList");
+completed.forEach(c=>{
+const card=document.createElement("div");
+card.className="card";
+card.innerHTML=`
+<h3>${c.event}</h3>
+<p>Customer: ${c.customer}</p>
+<p>Date: ${c.date}</p>
+`;
+list.appendChild(card);
+});
+}
+
+
+window.onload=loadCompleted;
+</script>
+</html>

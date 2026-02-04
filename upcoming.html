@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Upcoming Events</title>
+<link rel="stylesheet" href="styles.css" />
+<script src="upcoming.js" defer></script>
+</head>
+<body>
+<header class="top-bar">Upcoming Events</header>
+<section class="container">
+<h2>Next 7 Days Events</h2>
+<div id="upcomingList" class="card-list"></div>
+</section>
+</body>
+<script>
+    const upcoming=[
+{name:"Arun", event:"Wedding", date:"2025-12-20"},
+{name:"Dinesh", event:"Puberty Function", date:"2025-12-22"}
+];
+
+
+function loadUpcoming(){
+const list=document.getElementById("upcomingList");
+upcoming.forEach(u=>{
+const card=document.createElement("div");
+card.className="card";
+card.innerHTML=`
+<h3>${u.event}</h3>
+<p>Customer: ${u.name}</p>
+<p>Date: ${u.date}</p>
+<button class="btn">View</button>
+`;
+list.appendChild(card);
+});
+}
+window.onload=loadUpcoming;
+</script>
+</html>

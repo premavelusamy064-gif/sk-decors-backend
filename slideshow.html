@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>slideshow Images</title>
+<style>
+body{
+  font-family: "Times New Roman", Times, serif;
+  margin:0;
+  background:#f4f6fb;
+}
+
+/* Top bar */
+.top-bar{
+  background:#7d2440;
+  color:#fff;
+  padding:15px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.top-bar a{
+  color:#fff;
+  text-decoration:none;
+  font-weight:600;
+}
+
+/* Gallery grid */
+.gallery{
+  padding:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:15px;
+}
+.card{
+  background:#fff;
+  border-radius:10px;
+  box-shadow:0 6px 15px rgba(0,0,0,.1);
+  overflow:hidden;
+}
+.card img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+}
+.actions{
+  display:flex;
+  justify-content:space-around;
+  padding:10px;
+}
+.actions button{
+  border:none;
+  padding:6px 10px;
+  cursor:pointer;
+  border-radius:5px;
+}
+.edit{ background:#ffc107; }
+.delete{ background:#dc3545; color:#fff; }
+
+/* Add button */
+.add-btn{
+  margin:20px;
+  padding:10px 16px;
+  background:#7d2440;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* Popup */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+.popup-box{
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+}
+.popup-box input{
+  width:100%;
+  padding:8px;
+  margin-bottom:10px;
+}
+.popup-box button{
+  width:100%;
+  padding:8px;
+  margin-top:5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top-bar">
+  <h3>slideshow images</h3>
+  <a href="dashboard.html">← Back to Dashboard</a>
+</div>
+
+<button class="add-btn" onclick="openPopup()">+ Add Image</button>
+
+<div class="gallery" id="gallery"></div>
+
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-box">
+    <h4 id="popupTitle">Add Image</h4>
+<input type="file" id="imgFile" accept="image/*">
+    <button onclick="saveImage()">Save</button>
+    <button onclick="closePopup()">Cancel</button>
+  </div>
+</div>
+
+<script>
+let editId = null;
+
+/* LOAD */
+function loadGallery(){
+  fetch("/api/gallery/slideshow")
+    .then(res=>res.json())
+    .then(data=>{
+      const g=document.getElementById("gallery");
+      g.innerHTML="";
+      data.forEach(img=>{
+        g.innerHTML+=`
+          <div class="card">
+            <img src="${img.image_url}">
+            <div class="actions">
+              <button class="edit" onclick="editImage(${img.id})">Edit</button>
+              <button class="delete" onclick="deleteImage(${img.id})">Delete</button>
+            </div>
+          </div>
+        `;
+      });
+    });
+}
+
+/* POPUP */
+function openPopup(){
+  editId=null;
+  imgFile.value="";
+  popupTitle.innerText="Add Slideshow Image";
+  popup.style.display="flex";
+}
+function closePopup(){ popup.style.display="none"; }
+
+/* SAVE */
+function saveImage(){
+  const file = imgFile.files[0];
+  if(!file) return alert("Select image");
+
+  const f = new FormData();
+  f.append("image", file);
+
+  let url = "/api/slideshow";
+  let method = "POST";
+
+  if(editId !== null){
+    url = `/api/slideshow/${editId}`;
+    method = "PUT";
+  }
+
+  fetch(url, { method, body: f })
+    .then(res => res.json())
+    .then(data => {
+      if(!data.success){
+        alert("image already exists");
+        return;
+      }
+      loadGallery();
+      closePopup();
+      imgFile.value = "";
+      editId = null;
+    });
+}
+
+/* EDIT */
+function editImage(id){
+  editId=id;
+  popupTitle.innerText="Edit Slideshow Image";
+  popup.style.display="flex";
+}
+
+/* DELETE */
+function deleteImage(id){
+  if(confirm("Delete this image?")){
+    fetch(`/api/slideshow/${id}`, { method:"DELETE" })
+      .then(res => res.json())
+      .then(() => loadGallery());
+  }
+}
+
+/* INIT */
+loadGallery();
+</script>
+</body>
+</html>

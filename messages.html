@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Messages</title>
+<link rel="stylesheet" href="styles.css" />
+<script src="messages.js" defer></script>
+</head>
+<body>
+<header class="top-bar">Messages From Customers</header>
+<section class="container">
+<h2>Customer Messages</h2>
+<div id="messageList" class="card-list"></div>
+</section>
+</body>
+<script>
+function loadContacts(){
+  fetch("/api/contacts")
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById("messageList");
+      list.innerHTML = "";
+
+      if(data.length === 0){
+        list.innerHTML = "<p>No contact messages</p>";
+        return;
+      }
+
+      data.forEach(m => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h3>${m.name}</h3>
+          <p><strong>Phone:</strong> ${m.phone}</p>
+          <p><strong>Email:</strong> ${m.email || "-"}</p>
+          <p><strong>Message:</strong> ${m.message}</p>
+          <h3><b><span class="tag contact">Contact</span><b></h3>
+        `;
+        list.appendChild(card);
+      });
+    });
+}
+window.onload = loadContacts;
+</script>
+</html>
