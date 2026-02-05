@@ -460,5 +460,9 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
+  app.get("/", (req, res) => {
+  res.send("SK Decors Backend is running 🚀");
+});
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
