@@ -6,17 +6,22 @@ const path = require("path");
 const crypto = require("crypto");
 const app = express();
 const multer = require("multer");
-const fs = require("fs");
 const nodemailer = require("nodemailer");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const fs = require("fs");
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 // Serve frontend
 app.use(express.static(path.join(__dirname, "../frontend")));
-app.use("/uploads",
-  express.static(path.join(__dirname, "../frontend/uploads"))
-);
+
 // DB connection
 const db = mysql.createConnection({
   host: "localhost",
@@ -39,20 +44,14 @@ const mailer = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS
   }
 });
-const uploadPath = path.join(__dirname, "../frontend/uploads");
-
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "sk_decor",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"]
   }
 });
+
 const upload = multer({ storage });
 // Home
 app.get("/", (req, res) => {
@@ -135,7 +134,6 @@ app.get("/api/gallery/homepage/all", (req, res) => {
     }
   );
 });
-
 // Get ONLY slideshow images
 app.get("/api/gallery/slideshow", (req, res) => {
   db.query(
@@ -148,158 +146,65 @@ app.get("/api/gallery/slideshow", (req, res) => {
 });
 // Add image
 app.post("/api/gallery", upload.single("image"), (req, res) => {
-  if (!req.file) return res.json({ success: false, message: "No image selected" });
+  if (!req.file) return res.json({ success: false });
 
-  const filePath = req.file.path;
-  const buffer = fs.readFileSync(filePath);
-  const hash = crypto.createHash("sha256").update(buffer).digest("hex");
-
+  const imageUrl = req.file.path;      // cloudinary url
+  const cloudId = req.file.filename;   // public id
   const section = req.body.section || "gallery";
-  const imageUrl = "/uploads/" + req.file.filename;
 
-  const sql = `
-    INSERT INTO gallery (image_url, image_hash, section)
-    VALUES (?, ?, ?)
-  `;
-
-  db.query(sql, [imageUrl, hash, section], (err) => {
-    if (err) {
-      // Delete the uploaded file to avoid clutter
-      fs.unlinkSync(filePath);
-
-      // If duplicate, send friendly message
-      if (err.code === "ER_DUP_ENTRY") {
-        return res.json({ success: false, message: "Image already exists" });
-      }
-
-      // Other errors
-      return res.json({ success: false, message: "Database error" });
-    }
-
-    // Success
-    res.json({ success: true, message: "Image uploaded successfully" });
-  });
+  db.query(
+    "INSERT INTO gallery (image_url, cloud_id, section) VALUES (?, ?, ?)",
+    [imageUrl, cloudId, section],
+    () => res.json({ success: true })
+  );
 });
 app.post("/api/slideshow", upload.single("image"), (req, res) => {
-
-  const filePath = req.file.path;
-  const buffer = fs.readFileSync(filePath);
-  const hash = crypto.createHash("sha256").update(buffer).digest("hex");
-  const imageUrl = "/uploads/" + req.file.filename;
-
-  const sql = `
-    INSERT INTO gallery (image_url, image_hash, section)
-    VALUES (?, ?, 'slideshow')
-  `;
-
-  db.query(sql, [imageUrl, hash], (err) => {
-    if (err) {
-      fs.unlinkSync(filePath);
-      return res.json({ success:false });
-    }
-    res.json({ success:true });
-  });
-});
-
-// Update image
-app.put("/api/slideshow/:id", upload.single("image"), (req, res) => {
-
-  const id = req.params.id;
+  const imageUrl = req.file.path;
+  const cloudId = req.file.filename;
 
   db.query(
-    "SELECT image_url FROM gallery WHERE id=? AND section='slideshow'",
-    [id],
-    (err, rows) => {
-
-      if (!rows.length) return res.json({ success:false });
-
-      fs.unlink(path.join(__dirname, "../frontend", rows[0].image_url), () => {});
-
-      const newUrl = "/uploads/" + req.file.filename;
-
-      db.query(
-        "UPDATE gallery SET image_url=? WHERE id=? AND section='slideshow'",
-        [newUrl, id],
-        () => res.json({ success:true })
-      );
-    }
+    "INSERT INTO gallery (image_url, cloud_id, section) VALUES (?, ?, 'slideshow')",
+    [imageUrl, cloudId],
+    () => res.json({ success: true })
   );
 });
 
-app.put("/api/gallery/:id", upload.single("image"), (req, res) => {
-
-  const id = req.params.id;
-
-  if (!req.file) {
-    return res.json({ success: false });
-  }
-
-  db.query(
-    "SELECT image_url FROM gallery WHERE id=?",
-    [id],
-    (err, rows) => {
-
-      if (rows.length > 0) {
-        const oldPath = path.join(
-          __dirname,
-          "../frontend",
-          rows[0].image_url
-        );
-        fs.unlink(oldPath, () => {});
-      }
-
-      const newUrl = "/uploads/" + req.file.filename;
-
-      db.query(
-        "UPDATE gallery SET image_url=? WHERE id=?",
-        [newUrl, id],
-        () => res.json({ success: true })
-      );
-    }
-  );
-});
-
-// Delete image
+// Delete gallery image (Cloudinary)
 app.delete("/api/gallery/:id", (req, res) => {
 
   const id = req.params.id;
 
   db.query(
-    "SELECT image_url FROM gallery WHERE id=? AND section='gallery'",
+    "SELECT cloud_id FROM gallery WHERE id=? AND section='gallery'",
     [id],
     (err, rows) => {
 
       if (!rows.length) {
-        return res.json({ success:false, message:"Gallery image not found" });
+        return res.json({ success: false, message: "Gallery image not found" });
       }
 
-      const filePath = path.join(__dirname, "../frontend", rows[0].image_url);
-      fs.unlink(filePath, () => {});
+      // 🔥 Delete image from Cloudinary
+      cloudinary.uploader.destroy(rows[0].cloud_id);
 
+      // 🔥 Delete record from DB
       db.query(
-        "DELETE FROM gallery WHERE id=? AND section='full'",
+        "DELETE FROM gallery WHERE id=? AND section='gallery'",
         [id],
-        () => res.json({ success:true })
+        () => res.json({ success: true })
       );
     }
   );
 });
-
 app.delete("/api/slideshow/:id", (req, res) => {
-
   const id = req.params.id;
 
   db.query(
-    "SELECT image_url FROM gallery WHERE id=? AND section='slideshow'",
+    "SELECT cloud_id FROM gallery WHERE id=? AND section='slideshow'",
     [id],
-    (err, rows) => {
+    async (err, rows) => {
+      if (!rows.length) return res.json({ success:false });
 
-      if (!rows.length) {
-        return res.json({ success:false });
-      }
-
-      const filePath = path.join(__dirname, "../frontend", rows[0].image_url);
-      fs.unlink(filePath, () => {});
+      await cloudinary.uploader.destroy(rows[0].cloud_id);
 
       db.query(
         "DELETE FROM gallery WHERE id=? AND section='slideshow'",
@@ -332,51 +237,49 @@ app.get("/api/gallery/homepage", (req, res) => {
 
 // Add image to HOMEPAGE
 app.post("/api/gallery/homepage", upload.single("image"), (req, res) => {
-  if (!req.file) {
-    return res.json({ success: false, message: "No image selected" });
-  }
+  if (!req.file) return res.json({ success: false });
 
-  const filePath = req.file.path;
-  const buffer = fs.readFileSync(filePath);
-  const hash = crypto.createHash("sha256").update(buffer).digest("hex");
-  const imageUrl = "/uploads/" + req.file.filename;
+  const imageUrl = req.file.path;
+const cloudId = req.file.public_id;
 
-  const sql = `
-    INSERT INTO gallery (image_url, image_hash, section)
-    VALUES (?, ?, 'homepage')
-  `;
-
-  db.query(sql, [imageUrl, hash], (err) => {
-    if (err) {
-      fs.unlinkSync(filePath);
-      return res.json({ success: false, message: "Duplicate image" });
-    }
-    res.json({ success: true });
-  });
+  db.query(
+    "INSERT INTO gallery (image_url, cloud_id, section) VALUES (?, ?, 'homepage')",
+    [imageUrl, cloudId],
+    () => res.json({ success: true })
+  );
 });
 
-// Delete homepage image
+// Delete homepage image (Cloudinary)
 app.delete("/api/gallery/homepage/:id", (req, res) => {
   const id = req.params.id;
 
   db.query(
-    "SELECT image_url FROM gallery WHERE id=? AND section='homepage'",
+    "SELECT cloud_id FROM gallery WHERE id=? AND section='homepage'",
     [id],
-    (err, rows) => {
-      if (!rows.length) return res.json({ success: false });
+    async (err, rows) => {
+      if (err || rows.length === 0) {
+        return res.json({ success: false });
+      }
 
-      const filePath = path.join(__dirname, "../frontend", rows[0].image_url);
-      fs.unlink(filePath, () => {});
+      const cloudId = rows[0].cloud_id;
 
-      db.query(
-        "DELETE FROM gallery WHERE id=? AND section='homepage'",
-        [id],
-        () => res.json({ success: true })
-      );
+      try {
+        // 🔥 delete from cloudinary
+        await cloudinary.uploader.destroy(cloudId);
+
+        // 🔥 delete from database
+        db.query(
+          "DELETE FROM gallery WHERE id=? AND section='homepage'",
+          [id],
+          () => res.json({ success: true })
+        );
+      } catch (error) {
+        console.error("Cloudinary delete error:", error);
+        res.json({ success: false });
+      }
     }
   );
 });
-
 //all services 
 app.get("/api/services", (req, res) => {
   db.query(
