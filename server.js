@@ -16,11 +16,11 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 // Serve frontend
-app.use(express.static(path.join(__dirname, "../frontend")));
+//app.use(express.static(path.join(__dirname, "../frontend")));
 
 // DB connection
 const db = mysql.createConnection({
@@ -30,13 +30,13 @@ const db = mysql.createConnection({
   database: "sk_decor",
   multipleStatements: true
 });
-db.connect(err => {
-  if (err) {
-    console.error("DB Error:", err);
-    return;
-  }
-  console.log("MySQL Connected");
-});
+//db.connect(err => {
+  //if (err) {
+    //console.error("DB Error:", err);
+    //return;
+  //}
+  //console.log("MySQL Connected");
+//});
 const mailer = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -55,8 +55,9 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 // Home
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+  res.send("SK Decors Backend is running 🚀");
 });
+
 /* ================= LOGIN ================= */
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
@@ -460,9 +461,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  app.get("/", (req, res) => {
-  res.send("SK Decors Backend is running 🚀");
-});
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
