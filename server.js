@@ -24,11 +24,11 @@ app.use(express.json());
 
 // DB connection
 const db = mysql.createConnection({
-  host: process.env.mysql.railway.internal,
-  user: process.env.root,
-  password: process.env.OIufVmmBVLtRVazunwWKoAzFkEgjMQVh,
-  database: process.env.railway,
-  port: process.env.3306,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
   multipleStatements: true
 });
 db.connect(err => {
@@ -464,6 +464,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
