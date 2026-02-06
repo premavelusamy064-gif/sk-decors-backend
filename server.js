@@ -23,20 +23,20 @@ app.use(express.json());
 //app.use(express.static(path.join(__dirname, "../frontend")));
 
 // DB connection
-//const db = mysql.createConnection({
-  //host: "localhost",
-  //user: "root",
-  //password: "1234",
-  //database: "sk_decor",
-  //multipleStatements: true
-//});
-//db.connect(err => {
-  //if (err) {
-    //console.error("DB Error:", err);
-    //return;
-  //}
-  //console.log("MySQL Connected");
-//});
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "1234",
+  database: "sk_decor",
+  multipleStatements: true
+});
+db.connect(err => {
+  if (err) {
+    console.error("DB Error:", err);
+    return;
+  }
+  console.log("MySQL Connected");
+});
 const mailer = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -463,6 +463,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
