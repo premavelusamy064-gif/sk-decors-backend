@@ -20,7 +20,7 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 // Serve frontend
-app.use(express.static(path.join(__dirname, "../frontend")));
+//app.use(express.static(path.join(__dirname, "../frontend")));
 
 // DB connection
 const db = mysql.createConnection({
@@ -462,3 +462,4 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
