@@ -54,8 +54,8 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 // Home
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+//app.get("/", (req, res) => {
+  //res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 /* ================= LOGIN ================= */
 app.post("/api/login", (req, res) => {
@@ -462,4 +462,5 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
