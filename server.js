@@ -16,19 +16,18 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 // Serve frontend
-//app.use(express.static(path.join(__dirname, "../frontend")));
+app.use(express.static(path.join(__dirname, "../frontend")));
 
 // DB connection
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
+  host: "localhost",
+  user: "root",
+  password: "1234",
+  database: "sk_decor",
   multipleStatements: true
 });
 db.connect(err => {
@@ -56,9 +55,8 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 // Home
 app.get("/", (req, res) => {
-  res.send("SK Decors Backend is running 🚀");
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
-
 /* ================= LOGIN ================= */
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
@@ -464,9 +462,3 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
-
-
-
-
-
