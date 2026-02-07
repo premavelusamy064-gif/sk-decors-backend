@@ -414,13 +414,18 @@ app.get("/api/contacts", (req, res) => {
 
 app.get("/api/admin-profile", (req, res) => {
   const username = req.query.username;
+  console.log("Username received:", username);
 
   const sql = "SELECT id, username, email FROM admins WHERE username = ?";
   db.query(sql, [username], (err, result) => {
-    if (err || result.length === 0) {
+    if (err) {
+      console.log("SQL Error:", err);
       return res.json({ error: true });
     }
-
+    console.log("DB result:", result);
+    if (result.length === 0) {
+      return res.json({ error: true });
+    }
     res.json(result[0]);
   });
 });
@@ -465,6 +470,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
