@@ -57,7 +57,7 @@ const storage = new CloudinaryStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024   // 5MB
+    fileSize: 15 * 1024 * 1024   // ✅ 15MB
   }
 });
 // Home
@@ -476,6 +476,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
