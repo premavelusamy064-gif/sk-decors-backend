@@ -125,18 +125,6 @@ app.get("/api/gallery", (req, res) => {
     res.json(result);
   });
 });
-app.get("/api/gallery/homepage", (req, res) => {
-  const sql = `
-    SELECT * FROM gallery 
-    WHERE section='homepage'
-    ORDER BY created_at DESC
-    LIMIT 8
-  `;
-  db.query(sql, (err, result) => {
-    if (err) return res.json([]);
-    res.json(result);
-  });
-});
 app.get("/api/gallery/homepage/all", (req, res) => {
   db.query(
     "SELECT * FROM gallery WHERE section='homepage' ORDER BY id DESC",
@@ -251,8 +239,9 @@ app.get("/api/gallery/homepage", (req, res) => {
 app.post("/api/gallery/homepage", upload.single("image"), (req, res) => {
   if (!req.file) return res.json({ success: false });
 
-  const imageUrl = req.file.path;
-const cloudId = req.file.public_id;
+  const imageUrl = req.file.path;      // cloudinary URL
+const cloudId = req.file.filename;  // public_id
+
 
   db.query(
     "INSERT INTO gallery (image_url, cloud_id, section) VALUES (?, ?, 'homepage')",
@@ -479,6 +468,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
