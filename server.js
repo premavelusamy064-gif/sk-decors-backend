@@ -46,6 +46,14 @@ const mailer = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS
   }
 });
+mailer.verify((err, success) => {
+  if (err) {
+    console.log("❌ Mail error:", err);
+  } else {
+    console.log("✅ Mail server ready");
+  }
+});
+
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -476,6 +484,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
