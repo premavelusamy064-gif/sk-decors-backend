@@ -48,15 +48,6 @@ const mailer = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS  // Brevo SMTP KEY
   }
 });
-
-mailer.verify((err, success) => {
-  if (err) {
-    console.log("❌ Mail error:", err);
-  } else {
-    console.log("✅ Mail server ready");
-  }
-});
-
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -361,7 +352,7 @@ app.delete("/api/services/:id", (req, res) => {
       if (err) return res.json({ success: false, msg: "Database error" });
 
       const mailOptions = {
- from: `"SK Decor Website" <${process.env.ADMIN_EMAIL}>`,
+from: `"SK Decor Website" <${process.env.EMAIL_USER}>`,
         to: process.env.ADMIN_EMAIL,
         subject: `New Event Enquiry - SK Decor (${source || "Contact"})`,
         html: `
@@ -373,11 +364,15 @@ app.delete("/api/services/:id", (req, res) => {
         `
       };
 
-      mailer.sendMail(mailOptions, (mailErr) => {
-        if (mailErr) return res.json({ success: false, msg: "Mail failed" });
+      mailer.sendMail(mailOptions, (mailErr, info) => {
+  if (mailErr) {
+    console.error("❌ Mail send error:", mailErr);
+    return res.json({ success: false, msg: "Mail failed" });
+  }
 
-        res.json({ success: true, msg: "Message saved & mail sent" });
-      });
+  console.log("✅ Mail sent:", info.response);
+  res.json({ success: true, msg: "Message saved & mail sent" });
+});
     }
   );
 });
@@ -487,6 +482,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
