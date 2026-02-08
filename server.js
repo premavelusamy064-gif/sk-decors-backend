@@ -54,7 +54,12 @@ const storage = new CloudinaryStorage({
   }
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024   // 5MB
+  }
+});
 // Home
 app.get("/", (req, res) => {
   res.send("SK Decors Backend is running 🚀");
@@ -146,6 +151,9 @@ app.get("/api/gallery/slideshow", (req, res) => {
 });
 // Add image
 app.post("/api/gallery", upload.single("image"), (req, res) => {
+  
+console.log("FILE:", req.file);
+
   if (!req.file) return res.json({ success: false });
 
   const imageUrl = req.file.path;      // cloudinary url
@@ -468,6 +476,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
