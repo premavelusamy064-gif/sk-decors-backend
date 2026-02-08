@@ -42,11 +42,17 @@ db.connect(err => {
 const mailer = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
   port: 587,
-  secure: false, // IMPORTANT for 587
+  secure: false,
   auth: {
-    user: process.env.EMAIL_USER, // a1dadf001@smtp-brevo.com
-    pass: process.env.EMAIL_PASS  // Brevo SMTP KEY
-  }
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 10000, // 10 sec
+  greetingTimeout: 10000,
+  socketTimeout: 10000
 });
 const storage = new CloudinaryStorage({
   cloudinary,
@@ -482,6 +488,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
