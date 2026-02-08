@@ -63,10 +63,19 @@ app.get("/", (req, res) => {
 /* ================= LOGIN ================= */
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
-  const sql =
-    "SELECT * FROM admins WHERE username=? AND password=?";
-  db.query(sql, [username, password], (err, result) => {
-    if (err) return res.json({ success: false });
+
+  const sql = `
+    SELECT * FROM admins 
+    WHERE (username = ? OR email = ?) 
+    AND password = ?
+  `;
+
+  db.query(sql, [username, username, password], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.json({ success: false });
+    }
+
     if (result.length > 0) {
       res.json({ success: true });
     } else {
@@ -470,6 +479,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
