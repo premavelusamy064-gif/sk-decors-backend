@@ -361,7 +361,7 @@ app.delete("/api/services/:id", (req, res) => {
       if (err) return res.json({ success: false, msg: "Database error" });
 
       const mailOptions = {
-        from: `"SK Decor Website" <${process.env.EMAIL_USER}>`,
+ from: `"SK Decor Website" <${process.env.ADMIN_EMAIL}>`,
         to: process.env.ADMIN_EMAIL,
         subject: `New Event Enquiry - SK Decor (${source || "Contact"})`,
         html: `
@@ -487,6 +487,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
