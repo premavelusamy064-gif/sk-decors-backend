@@ -338,7 +338,8 @@ app.delete("/api/services/:id", (req, res) => {
     [req.params.id],
     () => res.json({ success:true })
   );
-});app.post("/api/contact", (req, res) => {
+});
+app.post("/api/contact", (req, res) => {
   const { name, phone, email, message, source } = req.body; // <- include source
 
   if (!name || !phone || !message) {
@@ -488,6 +489,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
