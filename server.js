@@ -1,12 +1,12 @@
 require("dotenv").config();
 const express = require("express");
+const axios = require("axios");
 const mysql = require("mysql2");
 const cors = require("cors");
 const path = require("path");
 const crypto = require("crypto");
 const app = express();
 const multer = require("multer");
-const nodemailer = require("nodemailer");
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const fs = require("fs");
@@ -38,21 +38,6 @@ db.connect(err => {
   } else {
     console.log("✅ MySQL Connected");
   }
-});
-const mailer = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 10000, // 10 sec
-  greetingTimeout: 10000,
-  socketTimeout: 10000
 });
 const storage = new CloudinaryStorage({
   cloudinary,
@@ -339,8 +324,8 @@ app.delete("/api/services/:id", (req, res) => {
     () => res.json({ success:true })
   );
 });
-app.post("/api/contact", (req, res) => {
-  const { name, phone, email, message, source } = req.body; // <- include source
+app.post("/api/contact", async (req, res) => {
+  const { name, phone, email, message, source } = req.body;
 
   if (!name || !phone || !message) {
     return res.json({ success: false, msg: "Missing required fields" });
@@ -354,32 +339,49 @@ app.post("/api/contact", (req, res) => {
 
   db.query(
     sql,
-    [name, phone, email || null, message, source || "Contact"], // use dynamic source
-    (err, result) => {
-      if (err) return res.json({ success: false, msg: "Database error" });
+    [name, phone, email || null, message, source || "Contact"],
+    async (err, result) => {
+      if (err) {
+        console.error("DB error:", err);
+        return res.json({ success: false, msg: "Database error" });
+      }
 
-      const mailOptions = {
-from: `"SK Decor Website" <${process.env.EMAIL_USER}>`,
-        to: process.env.ADMIN_EMAIL,
-        subject: `New Event Enquiry - SK Decor (${source || "Contact"})`,
-        html: `
-          <h3>New ${source || "Contact"} Enquiry</h3>
-          <p><b>Name:</b> ${name}</p>
-          <p><b>Phone:</b> ${phone}</p>
-          <p><b>Email:</b> ${email || "Not provided"}</p>
-          <p><b>Message:</b><br>${message}</p>
-        `
-      };
+      /* 🔥 SEND MAIL USING BREVO API */
+      try {
+        await axios.post(
+          "https://api.brevo.com/v3/smtp/email",
+          {
+            sender: {
+              name: "SK Decor Website",
+              email: process.env.ADMIN_EMAIL
+            },
+            to: [
+              { email: process.env.ADMIN_EMAIL }
+            ],
+            subject: `New ${source || "Contact"} Enquiry - SK Decor`,
+            htmlContent: `
+              <h3>New ${source || "Contact"} Enquiry</h3>
+              <p><b>Name:</b> ${name}</p>
+              <p><b>Phone:</b> ${phone}</p>
+              <p><b>Email:</b> ${email || "Not provided"}</p>
+              <p><b>Message:</b><br>${message}</p>
+            `
+          },
+          {
+            headers: {
+              "api-key": process.env.BREVO_API_KEY,
+              "Content-Type": "application/json"
+            }
+          }
+        );
 
-      mailer.sendMail(mailOptions, (mailErr, info) => {
-  if (mailErr) {
-    console.error("❌ Mail send error:", mailErr);
-    return res.json({ success: false, msg: "Mail failed" });
-  }
+        console.log("✅ Mail sent via Brevo");
+        res.json({ success: true, msg: "Message saved & mail sent" });
 
-  console.log("✅ Mail sent:", info.response);
-  res.json({ success: true, msg: "Message saved & mail sent" });
-});
+      } catch (mailErr) {
+        console.error("❌ Brevo mail error:", mailErr.response?.data || mailErr.message);
+        res.json({ success: false, msg: "Mail failed" });
+      }
     }
   );
 });
@@ -489,6 +491,7 @@ app.delete("/api/admin-profile/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 
 
